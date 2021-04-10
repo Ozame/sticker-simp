@@ -5,6 +5,7 @@ import (
 	"http"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"strconv"
@@ -80,7 +81,7 @@ func sendTextToTelegramChat(chatId int, text string) (string, error) {
 	return bodyString, nil
 }
 
-// HandleTelegramWebHook sends a message back to the chat with a punchline starting by the message provided by the user.
+// HandleTelegramWebHook edits the received image and sends the result back to the chat
 func HandleTelegramWebHook(w http.ResponseWriter, r *http.Request) {
 
 	// Parse incoming request
@@ -93,16 +94,17 @@ func HandleTelegramWebHook(w http.ResponseWriter, r *http.Request) {
 	bigPic := update.Message.Photos[len(update.Message.Photos)-1]
 	// TODO: Now get the photo file itself
 	getFileUrl := REQUESTURL + "getFile" + "?file_id=" + bigPic.FileID
+	http.PostForm(getFileUrl)
 
 	//TODO: download the file
 	fileUrl := "https://api.telegram.org/file/" + TOKEN + "/<file_path>"
 
-	// Send the punchline back to Telegram
-	var telegramResponseBody, errTelegram = sendTextToTelegramChat(update.Message.Chat.Id, "something")
+	// Send the edited picture image back to Telegram
+	var telegramResponseBody, errTelegram = sendTextToTelegramChat(update.Message.Chat.Id, "Here is supposed to be the response picture")
 	if errTelegram != nil {
 		log.Printf("got error %s from telegram, reponse body is %s", errTelegram.Error(), telegramResponseBody)
 	} else {
-		log.Printf("punchline %s successfuly distributed to chat id %d", "something", update.Message.Chat.Id)
+		log.Printf("Edited picture was successfuly distributed to chat id %d", update.Message.Chat.Id)
 	}
 }
 
