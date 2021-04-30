@@ -2,12 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"http"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 )
 
@@ -91,13 +89,13 @@ func HandleTelegramWebHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bigPic := update.Message.Photos[len(update.Message.Photos)-1]
+	// bigPic := update.Message.Photos[len(update.Message.Photos)-1]
 	// TODO: Now get the photo file itself
-	getFileUrl := REQUESTURL + "getFile" + "?file_id=" + bigPic.FileID
-	http.PostForm(getFileUrl)
+	// getFileUrl := REQUESTURL + "getFile" + "?file_id=" + bigPic.FileID
+	// http.PostForm(getFileUrl)
 
 	//TODO: download the file
-	fileUrl := "https://api.telegram.org/file/" + TOKEN + "/<file_path>"
+	// fileUrl := "https://api.telegram.org/file/" + TOKEN + "/<file_path>"
 
 	// Send the edited picture image back to Telegram
 	var telegramResponseBody, errTelegram = sendTextToTelegramChat(update.Message.Chat.Id, "Here is supposed to be the response picture")

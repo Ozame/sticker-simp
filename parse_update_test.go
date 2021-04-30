@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -31,8 +32,8 @@ func TestParseUpdateMessageWithText(t *testing.T) {
 	if errParse != nil {
 		t.Errorf("Expected a <nil> error, got %s", errParse.Error())
 	}
-	if *updateToTest != update {
-		t.Errorf("Expected update %s, got %s", update, updateToTest)
+	if reflect.DeepEqual(updateToTest, update) {
+		t.Errorf("Expected update %v, got %v", update, updateToTest)
 	}
 
 }
