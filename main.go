@@ -2,14 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 )
 
-const TOKEN string = "read from environment"
+var TOKEN string = os.Getenv("BOT_TOKEN")
+
 const REQUESTURL string = "https://api.telegram.org/" + TOKEN + "/"
 
 type Update struct {
@@ -33,6 +36,11 @@ type Photo struct {
 type Document struct {
 	FileID   string `json:"file_id"`
 	FileName string `json:"file_name"`
+}
+
+type File struct {
+	FileID   string `json:"file_id"`
+	FilePath string `json:"file_path"`
 }
 
 // A Telegram Chat indicates the conversation to which the message belongs.
@@ -89,14 +97,40 @@ func HandleTelegramWebHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// bigPic := update.Message.Photos[len(update.Message.Photos)-1]
+	bigPic := update.Message.Photos[len(update.Message.Photos)-1]
 	// TODO: Now get the photo file itself
-	// getFileUrl := REQUESTURL + "getFile" + "?file_id=" + bigPic.FileID
-	// http.PostForm(getFileUrl)
-
+	getFileUrl := REQUESTURL + "getFile" + "?file_id=" + bigPic.FileID
+	resp, err := http.Get(getFileUrl)
+	if err != nil {
+		log.Printf("error in getting actual file %s", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	// var bodyBytes, errRead = ioutil.ReadAll(resp.Body)
+	// if errRead != nil {
+	// 	log.Printf("error in parsing telegram answer %s", errRead.Error())
+	// 	return
+	// }
+	var file File
+	if err := json.NewDecoder(resp.Body).Decode(&file); err != nil {
+		log.Printf("could not decode incoming file %s", err.Error())
+		return //TODO: error handling
+	}
 	//TODO: download the file
-	// fileUrl := "https://api.telegram.org/file/" + TOKEN + "/<file_path>"
-
+	fileUrl := "https://api.telegram.org/file/" + TOKEN + "/" + file.FilePath
+	resp, err = http.Get(fileUrl)
+	if err != nil {
+		log.Printf("error in downloading actual file %s", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	// imaging.RecodeAndScale(resp.Body,)
+	var bodyBytes, errRead = ioutil.ReadAll(resp.Body)
+	if errRead != nil {
+		log.Printf("error in parsing telegram answer %s", errRead.Error())
+		return
+	}
+	fmt.Println(bodyBytes)
 	// Send the edited picture image back to Telegram
 	var telegramResponseBody, errTelegram = sendTextToTelegramChat(update.Message.Chat.Id, "Here is supposed to be the response picture")
 	if errTelegram != nil {
@@ -107,9 +141,9 @@ func HandleTelegramWebHook(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// err := http.ListenAndServe(":8080", http.HandlerFunc(HandleTelegramWebHook))
-	// if err != nil {
-	//     log.Fatal(err)
-	//     return
-	// }
+	err := http.ListenAndServe(":8080", http.HandlerFunc(HandleTelegramWebHook))
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 }
