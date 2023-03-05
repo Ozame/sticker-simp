@@ -78,11 +78,11 @@ func parseTelegramRequest(r *http.Request) (*Update, error) {
 func sendPhotoToTelegramChat(chatId int64, reader *os.File) error {
 
 	log.Printf("Sending photo to chat_id: %d", chatId)
-	var telegramApi string = REQUESTURL + "sendPhoto"
+	var telegramApi string = REQUESTURL + "sendDocument"
 
 	values := map[string]io.Reader{
-		"chat_id": strings.NewReader(fmt.Sprintf("%d", chatId)),
-		"photo":   reader,
+		"chat_id":  strings.NewReader(fmt.Sprintf("%d", chatId)),
+		"document": reader,
 	}
 
 	err := Upload(chatId, telegramApi, values)
