@@ -1,39 +1,55 @@
-package main
+package function
 
 import (
-	"bytes"
-	"encoding/json"
 	"net/http/httptest"
-	"reflect"
+	"os"
 	"testing"
+
+	"github.com/ozame/sticker-simp/imaging"
 )
 
 var chat = Chat{Id: 1}
 
-//TODO: Fix this example test to do something actually useful
-func TestParseUpdateMessageWithText(t *testing.T) {
-	var msg = Message{
-		Text: "hello world",
-		Chat: chat,
-	}
+func TestParseUpdateMessage(t *testing.T) {
 
-	var update = Update{
-		UpdateId: 1,
-		Message:  msg,
-	}
-
-	requestBody, err := json.Marshal(update)
+	requestBody, err := os.Open("test-update.json")
 	if err != nil {
 		t.Errorf("Failed to marshal update in json, got %s", err.Error())
 	}
-	req := httptest.NewRequest("POST", "http://myTelegramWebHookHandler.com/secretToken", bytes.NewBuffer(requestBody))
+	req := httptest.NewRequest("POST", "http://myTelegramWebHookHandler.com/secretToken", requestBody)
 
 	var updateToTest, errParse = parseTelegramRequest(req)
+
+	if updateToTest.Message.Text != "test message" {
+		t.Errorf("Different Text content")
+	}
+
+	if len(updateToTest.Message.Photos) != 2 {
+		t.Errorf("Photo count not matching")
+	}
 	if errParse != nil {
 		t.Errorf("Expected a <nil> error, got %s", errParse.Error())
 	}
-	if reflect.DeepEqual(updateToTest, update) {
-		t.Errorf("Expected update %v, got %v", update, updateToTest)
-	}
 
+}
+
+func TestSendPhoto(t *testing.T) {
+
+	reader, _ := os.Open("brocc.jpg")
+	defer reader.Close()
+
+	tmp, _ := os.CreateTemp(".", "tmp")
+	defer tmp.Close()
+	defer os.Remove("tmp")
+
+	imaging.RecodeAndScale(reader, tmp)
+	tmp.Seek(0, 0)
+
+	var id int64 = 0 // Replace this with the chat id to test functionality
+
+	err := sendPhotoToTelegramChat(id, tmp)
+
+	if err != nil {
+		t.Errorf("failed upload %v", err)
+	}
 }
